@@ -3,8 +3,6 @@ import axios from "axios";
 import { Paper, TextField, Checkbox, Button } from "@material-ui/core";
 import "./App.css";
 
-const API_URL = process.env.REACT_APP_API_URL;
-
 class App extends React.Component {
     state = { tasks: [], currentTask: "" };
 
@@ -14,7 +12,7 @@ class App extends React.Component {
 
     // 🔹 GET tasks
     getTasks = async () => {
-        const res = await axios.get(`${API_URL}/api/tasks`);
+        const res = await axios.get("http://localhost:5000/api/tasks");
         this.setState({ tasks: res.data });
     };
 
@@ -23,38 +21,44 @@ class App extends React.Component {
         this.setState({ currentTask: e.target.value });
     };
 
-    // 🔹 ADD TASK
+    // 🔹 ADD TASK (FIXED)
     handleSubmit = async (e) => {
-        e.preventDefault();
-        console.log("SUBMIT TRIGGERED");
-        await axios.post(`${API_URL}/api/tasks`, {
+        e.preventDefault();   // 🔥 VERY IMPORTANT
+
+        console.log("SUBMIT TRIGGERED"); // debug
+
+        await axios.post("http://localhost:5000/api/tasks", {
             task: this.state.currentTask
         });
+
         this.setState({ currentTask: "" });
-        this.getTasks();
+        this.getTasks(); // refresh list
     };
 
     // 🔹 DELETE
     handleDelete = async (id) => {
-        await axios.delete(`${API_URL}/api/tasks/${id}`);
+        await axios.delete(`http://localhost:5000/api/tasks/${id}`);
         this.getTasks();
     };
 
     // 🔹 UPDATE
     handleUpdate = async (id) => {
-        await axios.put(`${API_URL}/api/tasks/${id}`);
+        await axios.put(`http://localhost:5000/api/tasks/${id}`);
         this.getTasks();
     };
 
     render() {
         const { tasks, currentTask } = this.state;
+
         return (
             <div className="app">
                 <header className="app-header">
                     <h1>My To-Do List</h1>
                 </header>
+
                 <div className="main-content">
                     <Paper elevation={3} className="todo-container">
+
                         {/* FORM */}
                         <form onSubmit={this.handleSubmit} className="task-form">
                             <TextField
@@ -70,6 +74,7 @@ class App extends React.Component {
                                 Add Task
                             </Button>
                         </form>
+
                         {/* LIST */}
                         <div className="tasks-list">
                             {tasks.map((task) => (
@@ -91,6 +96,7 @@ class App extends React.Component {
                                 </Paper>
                             ))}
                         </div>
+
                     </Paper>
                 </div>
             </div>
@@ -99,3 +105,4 @@ class App extends React.Component {
 }
 
 export default App;
+

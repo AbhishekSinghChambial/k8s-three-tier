@@ -1,20 +1,26 @@
-# Use the official Node.js 14 image as a base image
-FROM node:14
+# -------------------------
+# Stage 1: Install deps
+# -------------------------
+FROM node:18-alpine AS builder
 
-# Set the working directory in the container
 WORKDIR /app
 
-# Copy the package.json and package-lock.json files to the container
 COPY package*.json ./
 
-# Install the application's dependencies inside the container
-RUN npm install
+# clean + reproducible install
+RUN npm ci --only=production
 
-# Copy the rest of the application code to the container
+# -------------------------
+# Stage 2: Final image
+# -------------------------
+FROM node:18-alpine
+
+WORKDIR /app
+
+# copy only required things
+COPY --from=builder /app/node_modules ./node_modules
 COPY . .
 
-# Expose Port to the container
-EXPOSE 8080
+EXPOSE 5000
 
-# Specify the command to run when the container starts
-CMD [ "node", "index.js" ]
+CMD ["node", "index.js"]

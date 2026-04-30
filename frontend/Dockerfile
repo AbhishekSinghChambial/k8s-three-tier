@@ -1,20 +1,37 @@
-# Use the official Node.js 14 image as a base image
-FROM node:14
+# -------------------------
+# Stage 1: Build React App
+# -------------------------
+FROM node:16-alpine AS build
 
-# Set the working directory in the container
+# Set working directory
 WORKDIR /app
 
-# Copy the package.json and package-lock.json files to the container
-COPY package*.json ./
+# Copy package files first (better caching)
+COPY package.json package-lock.json ./
 
-# Install the application's dependencies inside the container
+# Install dependencies
 RUN npm install
 
-# Copy the rest of the application code to the container
+# Copy rest of the source code
 COPY . .
 
-# Exposing Port to the container
-EXPOSE 3000
+# Build production bundle
+RUN npm run build
 
-# Specify the command to run when the container starts
-CMD [ "npm", "start" ]
+
+# -------------------------
+# Stage 2: Serve with Nginx
+# -------------------------
+FROM nginx:stable-alpine
+
+# Remove default nginx static files
+RUN rm -rf /usr/share/nginx/html/*
+
+# Copy build output from previous stage
+COPY --from=build /app/build /usr/share/nginx/html
+
+# Expose port 80
+EXPOSE 80
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]
