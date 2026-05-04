@@ -25,11 +25,12 @@ pipeline {
             steps {
                 withSonarQubeEnv('sonarqube') {
                     sh '''
-                        sonar-scanner \
-                        -Dsonar.projectKey=three-tier-app \
-                        -Dsonar.sources=. \
-                        -Dsonar.host.url=http://host.docker.internal:9000
-                    '''
+		/var/jenkins_home/tools/hudson.plugins.sonar.SonarRunnerInstallation/sonar-scanner/bin/sonar-scanner \
+                -Dsonar.projectKey=three-tier-app \
+                -Dsonar.sources=. \
+                -Dsonar.host.url=http://host.docker.internal:9000
+            '''
+
                 }
             }
         }
