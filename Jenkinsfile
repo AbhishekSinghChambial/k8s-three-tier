@@ -1,18 +1,14 @@
 pipeline {
     agent any
-
     tools {
         'hudson.plugins.sonar.SonarRunnerInstallation' 'sonar-scanner'
     }
-
     environment {
         DOCKER_HUB_CREDS = credentials('dockerhub-creds')
         DOCKER_USERNAME = 'abhisheksingh143'
         IMAGE_TAG = "v${BUILD_NUMBER}"
     }
-
     stages {
-
         stage('Checkout') {
             steps {
                 git branch: 'main',
@@ -20,21 +16,18 @@ pipeline {
                     url: 'https://github.com/AbhishekSinghChambial/k8s-three-tier.git'
             }
         }
-
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('sonarqube') {
                     sh '''
-		/var/jenkins_home/tools/hudson.plugins.sonar.SonarRunnerInstallation/sonar-scanner/bin/sonar-scanner \
-                -Dsonar.projectKey=three-tier-app \
-                -Dsonar.sources=. \
-                -Dsonar.host.url=http://host.docker.internal:9000
-            '''
-
+                        /var/jenkins_home/tools/hudson.plugins.sonar.SonarRunnerInstallation/sonar-scanner/bin/sonar-scanner \
+                        -Dsonar.projectKey=three-tier-app \
+                        -Dsonar.sources=. \
+                        -Dsonar.host.url=http://host.docker.internal:9000
+                    '''
                 }
             }
         }
-
         stage('Quality Gate') {
             steps {
                 timeout(time: 5, unit: 'MINUTES') {
@@ -42,7 +35,6 @@ pipeline {
                 }
             }
         }
-
         stage('Build Frontend Image') {
             steps {
                 dir('frontend') {
@@ -50,7 +42,6 @@ pipeline {
                 }
             }
         }
-
         stage('Build Backend Image') {
             steps {
                 dir('backend') {
@@ -58,7 +49,26 @@ pipeline {
                 }
             }
         }
-
+        stage('Trivy Scan') {
+            steps {
+                sh """
+                    docker run --rm \
+                    aquasec/trivy:latest image \
+                    --server http://host.docker.internal:4954 \
+                    --severity HIGH,CRITICAL \
+                    --exit-code 0 \
+                    ${DOCKER_USERNAME}/frontend:${IMAGE_TAG}
+                """
+                sh """
+                    docker run --rm \
+                    aquasec/trivy:latest image \
+                    --server http://host.docker.internal:4954 \
+                    --severity HIGH,CRITICAL \
+                    --exit-code 0 \
+                    ${DOCKER_USERNAME}/backend:${IMAGE_TAG}
+                """
+            }
+        }
         stage('Push to Docker Hub') {
             steps {
                 sh "echo ${DOCKER_HUB_CREDS_PSW} | docker login -u ${DOCKER_HUB_CREDS_USR} --password-stdin"
@@ -66,7 +76,6 @@ pipeline {
                 sh "docker push ${DOCKER_USERNAME}/backend:${IMAGE_TAG}"
             }
         }
-
         stage('Update YAML and Deploy') {
             steps {
                 sh "sed -i 's|${DOCKER_USERNAME}/frontend:.*|${DOCKER_USERNAME}/frontend:${IMAGE_TAG}|g' k8s/frontend-deployment.yaml"
@@ -78,7 +87,6 @@ pipeline {
             }
         }
     }
-
     post {
         success {
             echo "✅ Pipeline successful! Deployed: ${IMAGE_TAG}"
