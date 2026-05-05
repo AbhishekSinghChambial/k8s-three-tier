@@ -49,31 +49,44 @@ pipeline {
                 }
             }
         }
-        stage('Trivy Scan') {
-            steps {
-                sh """
-                    docker run --rm \
-                    aquasec/trivy:latest image \
-                    --server http://host.docker.internal:4954 \
-                    --severity HIGH,CRITICAL \
-                    --exit-code 0 \
-                    ${DOCKER_USERNAME}/frontend:${IMAGE_TAG}
-                """
-                sh """
-                    docker run --rm \
-                    aquasec/trivy:latest image \
-                    --server http://host.docker.internal:4954 \
-                    --severity HIGH,CRITICAL \
-                    --exit-code 0 \
-                    ${DOCKER_USERNAME}/backend:${IMAGE_TAG}
-                """
-            }
-        }
         stage('Push to Docker Hub') {
             steps {
                 sh "echo ${DOCKER_HUB_CREDS_PSW} | docker login -u ${DOCKER_HUB_CREDS_USR} --password-stdin"
                 sh "docker push ${DOCKER_USERNAME}/frontend:${IMAGE_TAG}"
                 sh "docker push ${DOCKER_USERNAME}/backend:${IMAGE_TAG}"
+            }
+        }
+        stage('Trivy Scan') {
+            steps {
+                sh """
+                    docker run --rm \
+                    -v \$(pwd):/reports \
+                    aquasec/trivy:latest image \
+                    --server http://host.docker.internal:4954 \
+                    --severity HIGH,CRITICAL \
+                    --exit-code 0 \
+                    --format template \
+                    --template "@contrib/html.tpl" \
+                    --output /reports/trivy-frontend-report.html \
+                    ${DOCKER_USERNAME}/frontend:${IMAGE_TAG}
+                """
+                sh """
+                    docker run --rm \
+                    -v \$(pwd):/reports \
+                    aquasec/trivy:latest image \
+                    --server http://host.docker.internal:4954 \
+                    --severity HIGH,CRITICAL \
+                    --exit-code 0 \
+                    --format template \
+                    --template "@contrib/html.tpl" \
+                    --output /reports/trivy-backend-report.html \
+                    ${DOCKER_USERNAME}/backend:${IMAGE_TAG}
+                """
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'trivy-*.html', fingerprint: true
+                }
             }
         }
         stage('Update YAML and Deploy') {
