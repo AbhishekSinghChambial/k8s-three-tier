@@ -66,7 +66,7 @@ pipeline {
                     --severity HIGH,CRITICAL \
                     --exit-code 0 \
                     --format template \
-                    --template "@contrib/html.tpl" \
+                    --template "@/usr/local/share/trivy/templates/html.tpl" \
                     --output /reports/trivy-frontend-report.html \
                     ${DOCKER_USERNAME}/frontend:${IMAGE_TAG}
                 """
@@ -78,7 +78,7 @@ pipeline {
                     --severity HIGH,CRITICAL \
                     --exit-code 0 \
                     --format template \
-                    --template "@contrib/html.tpl" \
+                    --template "@/usr/local/share/trivy/templates/html.tpl" \
                     --output /reports/trivy-backend-report.html \
                     ${DOCKER_USERNAME}/backend:${IMAGE_TAG}
                 """
