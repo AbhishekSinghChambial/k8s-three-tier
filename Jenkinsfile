@@ -90,7 +90,7 @@ pipeline {
                     --output /reports/trivy-backend-report.json \
                     ${DOCKER_USERNAME}/backend:${IMAGE_TAG}
                 """
-                sh "ls -la trivy-*.html || true"
+                sh "ls -la trivy-*.json || true"
             }
             post {
                 always {
