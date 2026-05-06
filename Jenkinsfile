@@ -71,26 +71,26 @@ pipeline {
                 sh """
                     docker run --rm \
                     -v \$(pwd):/reports \
-                    -v /var/jenkins_home/html.tpl:/html.tpl \
+                    -v \$(pwd)/html.tpl:/tmp/html.tpl \
                     aquasec/trivy:latest image \
                     --server http://host.docker.internal:4954 \
                     --severity HIGH,CRITICAL \
                     --exit-code 0 \
                     --format template \
-                    --template "@/html.tpl" \
+                    --template "@/tmp/html.tpl" \
                     --output /reports/trivy-frontend-report.html \
                     ${DOCKER_USERNAME}/frontend:${IMAGE_TAG}
                 """
                 sh """
                     docker run --rm \
                     -v \$(pwd):/reports \
-                    -v /var/jenkins_home/html.tpl:/html.tpl \
+                    -v \$(pwd)/html.tpl:/tmp/html.tpl \
                     aquasec/trivy:latest image \
                     --server http://host.docker.internal:4954 \
                     --severity HIGH,CRITICAL \
                     --exit-code 0 \
                     --format template \
-                    --template "@/html.tpl" \
+                    --template "@/tmp/html.tpl" \
                     --output /reports/trivy-backend-report.html \
                     ${DOCKER_USERNAME}/backend:${IMAGE_TAG}
                 """
