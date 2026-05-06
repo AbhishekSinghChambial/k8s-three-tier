@@ -25,7 +25,7 @@ pipeline {
             steps {
                 withSonarQubeEnv('sonarqube') {
                     sh '''
-                        sonar-scanner \
+                        /var/jenkins_home/tools/hudson.plugins.sonar.SonarRunnerInstallation/sonar-scanner/bin/sonar-scanner \
                         -Dsonar.projectKey=three-tier-app \
                         -Dsonar.sources=. \
                         -Dsonar.host.url=http://host.docker.internal:9000
@@ -60,11 +60,9 @@ pipeline {
 
         stage('Push to Docker Hub') {
             steps {
-                sh """
-                    echo ${DOCKER_HUB_CREDS_PSW} | docker login -u ${DOCKER_HUB_CREDS_USR} --password-stdin
-                    docker push ${DOCKER_USERNAME}/frontend:${IMAGE_TAG}
-                    docker push ${DOCKER_USERNAME}/backend:${IMAGE_TAG}
-                """
+                sh "echo ${DOCKER_HUB_CREDS_PSW} | docker login -u ${DOCKER_HUB_CREDS_USR} --password-stdin"
+                sh "docker push ${DOCKER_USERNAME}/frontend:${IMAGE_TAG}"
+                sh "docker push ${DOCKER_USERNAME}/backend:${IMAGE_TAG}"
             }
         }
 
@@ -83,7 +81,6 @@ pipeline {
                     --output /reports/trivy-frontend-report.html \
                     ${DOCKER_USERNAME}/frontend:${IMAGE_TAG}
                 """
-
                 sh """
                     docker run --rm \
                     -v \$(pwd):/reports \
@@ -97,10 +94,8 @@ pipeline {
                     --output /reports/trivy-backend-report.html \
                     ${DOCKER_USERNAME}/backend:${IMAGE_TAG}
                 """
-
                 sh "ls -la trivy-*.html || true"
             }
-
             post {
                 always {
                     archiveArtifacts artifacts: 'trivy-*.html',
@@ -112,16 +107,12 @@ pipeline {
 
         stage('Update YAML and Deploy') {
             steps {
-                sh """
-                    sed -i 's|${DOCKER_USERNAME}/frontend:.*|${DOCKER_USERNAME}/frontend:${IMAGE_TAG}|g' k8s/frontend-deployment.yaml
-                    sed -i 's|${DOCKER_USERNAME}/backend:.*|${DOCKER_USERNAME}/backend:${IMAGE_TAG}|g' k8s/backend-deployment.yaml
-
-                    kubectl apply -f k8s/frontend-deployment.yaml -n three-tier
-                    kubectl apply -f k8s/backend-deployment.yaml -n three-tier
-
-                    kubectl rollout status deployment/frontend -n three-tier
-                    kubectl rollout status deployment/backend -n three-tier
-                """
+                sh "sed -i 's|${DOCKER_USERNAME}/frontend:.*|${DOCKER_USERNAME}/frontend:${IMAGE_TAG}|g' k8s/frontend-deployment.yaml"
+                sh "sed -i 's|${DOCKER_USERNAME}/backend:.*|${DOCKER_USERNAME}/backend:${IMAGE_TAG}|g' k8s/backend-deployment.yaml"
+                sh "kubectl apply -f k8s/frontend-deployment.yaml -n three-tier"
+                sh "kubectl apply -f k8s/backend-deployment.yaml -n three-tier"
+                sh "kubectl rollout status deployment/frontend -n three-tier"
+                sh "kubectl rollout status deployment/backend -n three-tier"
             }
         }
     }
@@ -131,7 +122,7 @@ pipeline {
             echo "✅ Pipeline successful! Deployed: ${IMAGE_TAG}"
         }
         failure {
-            echo "❌ Pipeline failed! Check logs."
+            echo '❌ Pipeline failed! Check logs.'
         }
     }
 }
