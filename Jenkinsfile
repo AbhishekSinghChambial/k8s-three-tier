@@ -28,7 +28,7 @@ pipeline {
                         /var/jenkins_home/tools/hudson.plugins.sonar.SonarRunnerInstallation/sonar-scanner/bin/sonar-scanner \
                         -Dsonar.projectKey=three-tier-app \
                         -Dsonar.sources=. \
-                        -Dsonar.host.url=http://host.docker.internal:9000
+                        -Dsonar.host.url=http://host.docker.internal:9000 \
                         -Dsonar.projectVersion=v${BUILD_NUMBER}
 		    '''
                 }
