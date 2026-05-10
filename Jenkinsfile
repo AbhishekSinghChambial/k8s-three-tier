@@ -69,25 +69,19 @@ pipeline {
         stage('Trivy Scan') {
             steps {
                 sh """
-                    docker run --rm \
-                    -v \$(pwd):/reports \
-                    aquasec/trivy:latest image \
-                    --server http://host.docker.internal:4954 \
+                    trivy image \
                     --severity HIGH,CRITICAL \
                     --exit-code 0 \
                     --format json \
-                    --output /reports/trivy-frontend-report.json \
+                    --output trivy-frontend-report.json \
                     ${DOCKER_USERNAME}/frontend:${IMAGE_TAG}
                 """
                 sh """
-                    docker run --rm \
-                    -v \$(pwd):/reports \
-                    aquasec/trivy:latest image \
-                    --server http://host.docker.internal:4954 \
+                    trivy image \
                     --severity HIGH,CRITICAL \
                     --exit-code 0 \
                     --format json \
-                    --output /reports/trivy-backend-report.json \
+                    --output trivy-backend-report.json \
                     ${DOCKER_USERNAME}/backend:${IMAGE_TAG}
                 """
             }
