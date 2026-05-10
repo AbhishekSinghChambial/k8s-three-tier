@@ -73,18 +73,22 @@ pipeline {
                     --severity HIGH,CRITICAL \
                     --exit-code 0 \
                     --format json \
-                    --output trivy-frontend-report.json \
+                    --output ${WORKSPACE}/trivy-frontend-report.json \
                     ${DOCKER_USERNAME}/frontend:${IMAGE_TAG}
                 """
+
                 sh """
                     trivy image \
                     --severity HIGH,CRITICAL \
                     --exit-code 0 \
                     --format json \
-                    --output trivy-backend-report.json \
+                    --output ${WORKSPACE}/trivy-backend-report.json \
                     ${DOCKER_USERNAME}/backend:${IMAGE_TAG}
                 """
+
+                sh "ls -lah ${WORKSPACE}/trivy-*.json"
             }
+
             post {
                 always {
                     archiveArtifacts artifacts: 'trivy-*.json',
