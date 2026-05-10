@@ -29,7 +29,7 @@ pipeline {
                         -Dsonar.projectKey=three-tier-app \
                         -Dsonar.sources=. \
                         -Dsonar.host.url=http://host.docker.internal:9000
-                        -Dsonar.projectVersion=v${BUILD_NUMBER}-${GIT_COMMIT.take(7)}
+                        -Dsonar.projectVersion=v${BUILD_NUMBER}
 		    '''
                 }
             }
